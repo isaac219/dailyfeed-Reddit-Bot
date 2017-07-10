@@ -12,9 +12,9 @@ python dailyfeed.py recipient subreddit
 * specify the subreddits (space out multiple) to go through as additional arguments to the call
 * specify who you want to send the PM to 
 
-###Example
+### Example
 python dailyfeed.py RecipientRedditor fantheories lifeofnorman youshouldknow 
 
-##Other
+## Other
 OAuth authentication can also be handled in a praw.ini file within the working directory of this script, instead of in the script itself like this bot.
 
