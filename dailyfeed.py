@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 import praw, sys, datetime
 
+if len(sys.argv) < 3:
+    sys.exit("Syntax Error - Usage: %s recipient (subreddit)" % sys.argv[0])
+
 #initialize reddit instance
 reddit = praw.Reddit(client_id='',
-                    client_secret='',
-                    user_agent='',
-                    password='',
-                    username='')
+                     client_secret='',
+                     user_agent='',
+                     password='',
+                     username='')
 
 #get subreddits from CL arguments
 def getSubreddits():
