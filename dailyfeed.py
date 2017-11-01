@@ -12,25 +12,25 @@ reddit = praw.Reddit(client_id='',
                      username='')
 
 #get subreddits from CL arguments
-def getSubreddits():
-    subList = []    
-    for i in range (2,len(sys.argv)): 
-            subList.append(sys.argv[i])
-    return subList
+def get_subreddits():
+    sub_list = []
+    for i in range (2,len(sys.argv)):
+            sub_list.append(sys.argv[i])
+    return sub_list
 
 #map submissions into a dictionary with subreddit, title, and link
-def mapSubmissions(subList):
+def map_submissions(sub_list):
     global reddit
-    dictionary = {} 
-    for sub in subList:
+    dictionary = {}
+    for sub in sub_list:
         subreddit = reddit.subreddit(sub)
         count = 0
-        for submission in subreddit.top('day'):       
-            titleAndLink = [str(submission.title),str(submission.shortlink)]
-            dictionary.update({str(submission.subreddit): titleAndLink})   
+        for submission in subreddit.top("day"):       
+            title_and_link = [str(submission.title),str(submission.shortlink)]
+            dictionary.update({str(submission.subreddit): title_and_link})
             count +=1
             if count==1:
-                break          
+                break
     return dictionary
 
 #build and send the message to redditor
@@ -40,17 +40,15 @@ def message(dictionary):
     for key, value in dictionary.iteritems():
         title = value[0]
         link = value[1]
-        subredditName = "**r/" + str(key) + "**"
-        body+=(subredditName +"\n\n" + title +": " + link + "\n\n")
-    pmSubject = "Feed - " + str(datetime.date.today())
+        subreddit_name = "**r/" + str(key) + "**"
+        body+=(subreddit_name +"\n\n" + title +": " + link + "\n\n")
+    pm_subject = "Feed - " + str(datetime.date.today())
     recipient = sys.argv[1]
-    reddit.redditor(recipient).message(pmSubject, body)
-    
+    reddit.redditor(recipient).message(pm_subject, body)
+
 def main():
-    dictionary = mapSubmissions(getSubreddits())
+    dictionary = map_submissions(get_subreddits())
     message(dictionary)
 
 if __name__ == "__main__":
     main()
-    
-        
