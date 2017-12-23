@@ -51,4 +51,7 @@ def main():
     message(dictionary)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main();
+    except:
+        reddit.redditor(sys.argv[1]).message("Daily Feed Error", "Daily feed bot has encountered an error");
