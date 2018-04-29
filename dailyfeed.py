@@ -6,11 +6,7 @@ if len(sys.argv) < 3:
     sys.exit("Syntax Error - Usage: %s recipient (subreddit)" % sys.argv[0])
 
 #initialize reddit instance
-reddit = praw.Reddit(client_id='',
-                    client_secret='',
-                    user_agent='',
-                    password='',
-                    username='')
+reddit = praw.Reddit('bot1') 
 
 #get title and link from top daily post of each subreddit
 def get_post(sub, result, index):
@@ -28,17 +24,17 @@ def get_post(sub, result, index):
         result[index] = subreddit_name +  "Error encountered for r/" + str(subreddit) + "\n\n"
 
 #create threads for retrieving each subreddit post and send the pm
-def thread_and_pm():
+def thread_and_pm(args):
     sub_list = []
 
-    for i in range (2,len(sys.argv)):
-            sub_list.append(sys.argv[i])
+    for i in range (2,len(args)):
+            sub_list.append(args[i])
 
     global reddit
 
     subject= "Feed - " + str(datetime.date.today())
-    recipient = sys.argv[1]
     body = ""
+    recipient = sys.argv[1];
 
     threads = [None] * len(sub_list)
     results = [None] * len(sub_list)
@@ -58,6 +54,6 @@ def thread_and_pm():
 
 if __name__ == "__main__":
     start = time.time()
-    thread_and_pm()
+    thread_and_pm(sys.argv)
     end = time.time()
     print(end - start)
