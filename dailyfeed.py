@@ -24,17 +24,14 @@ def get_post(sub, result, index):
         result[index] = subreddit_name +  "Error encountered for r/" + str(subreddit) + "\n\n"
 
 #create threads for retrieving each subreddit post and send the pm
-def thread_and_pm(args):
+def build_message(args):
     sub_list = []
 
     for i in range (2,len(args)):
             sub_list.append(args[i])
 
-    global reddit
-
     subject= "Feed - " + str(datetime.date.today())
     body = ""
-    recipient = sys.argv[1];
 
     threads = [None] * len(sub_list)
     results = [None] * len(sub_list)
@@ -49,11 +46,17 @@ def thread_and_pm(args):
     for r in results:
         if(r != None): 
             body += r
+    
+    return (subject, body)
 
+#send the message (subject, body) to the recipient
+def pm(message, recipient):
+    subject = message[0]
+    body = message[1]
     reddit.redditor(recipient).message(subject, body)
 
 if __name__ == "__main__":
     start = time.time()
-    thread_and_pm(sys.argv)
+    pm(build_message(sys.argv), sys.argv[1])
     end = time.time()
     print(end - start)
