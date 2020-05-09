@@ -1,62 +1,65 @@
 #!/usr/bin/env python
-import praw, sys, datetime, time
-from threading import Thread
+import sys, datetime, time, traceback, argparse
+import praw
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 
-if len(sys.argv) < 3:
-    sys.exit("Syntax Error - Usage: %s recipient (subreddit)" % sys.argv[0])
+parser = argparse.ArgumentParser()
+parser.add_argument("-u", "--username", help="Username of recipient Redditor", required=True)
+parser.add_argument("-f", "--filepath", help="Filepath of input subreddits", required=True)
+args = parser.parse_args()
 
-#initialize reddit instance
-reddit = praw.Reddit('bot1') 
+def build_subject() -> str:
+    return "Feed - " + str(datetime.date.today())
 
-#get title and link from top daily post of each subreddit
-def get_post(sub, result, index):
+# asynchronously get top posts and then join
+def build_body(sub_names, reddit) -> str:
+
+    # Keep reddit param constant
+    func = partial(get_formatted_post, reddit=reddit)
+
+    with ThreadPoolExecutor() as exe:
+        results = exe.map(func, sub_names)
+        return "".join(results)
+
+# get top post from subreddit and format as string
+def get_formatted_post(sub_name, reddit) -> str:
+    subreddit = reddit.subreddit(sub_name)
     try:
-        subreddit = reddit.subreddit(sub)
-        for submission in subreddit.top('day'):
-            subreddit_name = "**r/" + str(submission.subreddit) + "**"
-            title = str(submission.title)
-            link = str(submission.shortlink)
-            result[index] = (subreddit_name +"\n\n" + title +": " + link + "\n\n")
-            return True
-    except:
-        print("Error encountered for " + sub)
-        subreddit_name = "**r/" + str(subreddit) + "**" + "\n\n"
-        result[index] = subreddit_name +  "Error encountered for r/" + str(subreddit) + "\n\n"
 
-#create threads for retrieving each subreddit post and send the pm
-def build_message(args):
-    sub_list = []
+        # top returns an Iterator, get the first value
+        submission = next(subreddit.top('day', limit=1))
 
-    for i in range (2,len(args)):
-            sub_list.append(args[i])
+        # format post
+        formatted_sub_name = subreddit_name = "**r/" + str(submission.subreddit) + "**"
+        title = str(submission.title)
+        link = str(submission.shortlink)
+        formatted_post = (formatted_sub_name +"\n\n" + title +": " + link + "\n\n")
 
-    subject= "Feed - " + str(datetime.date.today())
-    body = ""
+        return formatted_post
 
-    threads = [None] * len(sub_list)
-    results = [None] * len(sub_list)
+    except Exception as e:
+        traceback.print_exc()
+        formatted_sub_name = "**r/" + str(subreddit) + "**" + "\n\n"
+        return formatted_sub_name  +  "Error encountered for r/" + str(subreddit) + "\n\n"
 
-    for i in range(len(sub_list)):
-        threads[i] = Thread(target=get_post,args=(sub_list[i], results, i))
-        threads[i].start()
-
-    for i in range(len(threads)):
-        threads[i].join()
-
-    for r in results:
-        if(r != None): 
-            body += r
-    
-    return (subject, body)
-
-#send the message (subject, body) to the recipient
-def pm(message, recipient):
-    subject = message[0]
-    body = message[1]
+def pm(subject, body, recipient, reddit) -> None:
     reddit.redditor(recipient).message(subject, body)
 
 if __name__ == "__main__":
+    # Read inputs from file line by line and ignore empty
+    all_lines = open(args.filepath, "r").read().splitlines()
+    input_subs = [sub for sub in all_lines if sub]
+
+    # initialize reddit instance
+    reddit = praw.Reddit('bot1')
+
     start = time.time()
-    pm(build_message(sys.argv), sys.argv[1])
+
+    # build and send message
+    subject = build_subject()
+    body = build_body(input_subs, reddit)
+    pm(subject, body, args.username, reddit)
+
     end = time.time()
-    print(end - start)
+    print("Time: " + str(end - start))
